@@ -1,0 +1,15 @@
+packages:
+  - frontend
+  - backend
+  - shared
+
+# pnpm 10 blocks dependency install scripts by default. None of these are needed:
+# genai/protobufjs postinstalls are optional, msgpackr-extract falls back to pure JS,
+# sharp/unrs-resolver are optional for next/eslint, esbuild ships a prebuilt binary.
+ignoredBuiltDependencies:
+  - "@google/genai"
+  - esbuild
+  - msgpackr-extract
+  - protobufjs
+  - sharp
+  - unrs-resolver

@@ -1,0 +1,16 @@
+{
+  "name": "veritas-ai",
+  "private": true,
+  "description": "Evidence-backed claim verification for videos, articles and images",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build:shared": "pnpm --filter @veritas/shared run build",
+    "dev": "pnpm build:shared && pnpm -r --parallel --filter @veritas/shared --filter @veritas/frontend --filter @veritas/backend run dev:all",
+    "typecheck": "pnpm build:shared && pnpm -r run typecheck",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm build:shared && pnpm -r run test"
+  }
+}

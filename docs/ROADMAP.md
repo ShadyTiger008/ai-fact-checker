@@ -4,7 +4,7 @@ Tick items as they're completed (`- [x]`). Each item = one Claude Code task + on
 IDs are referenced in commits and prompts (e.g. `feat(input): W1-07 POST /verify`).
 
 ## Week 1 — Frontend + API + uploads
-- [ ] W1-01 Monorepo scaffold (pnpm workspaces `frontend`, `backend`, `shared`), root scripts, `.env.example`, `.gitignore`
+- [x] W1-01 Monorepo scaffold (pnpm workspaces `frontend`, `backend`, `shared`), root scripts, `.env.example`, `.gitignore`
 - [ ] W1-02 docker-compose (postgres, redis, minio + init); media service stub with `/health`
 - [ ] W1-03 Config module: Zod env schema, fail-fast
 - [ ] W1-04 Prisma schema (docs/DATABASE.md) + init migration + `PrismaService` + `JobsRepository.transition`

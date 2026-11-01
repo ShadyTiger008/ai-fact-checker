@@ -18,7 +18,7 @@ pnpm dlx @nestjs/cli new backend --directory backend --package-manager pnpm --sk
 # shared + media service
 mkdir -p shared/src media-service/app
 ```
-Set package names: `frontend` → `@veritas/frontend`, `backend` → `@veritas/backend`, `shared` → `@veritas/shared` (main/types → `src/index.ts` for MVP; both apps add `"@veritas/shared": "workspace:*"`).
+Set package names: `frontend` → `@veritas/frontend`, `backend` → `@veritas/backend`, `shared` → `@veritas/shared` (compiled to `shared/dist` — `pnpm build:shared`, run automatically by root `dev`/`typecheck`/`test`, see D-014; both apps add `"@veritas/shared": "workspace:*"`).
 
 Root `package.json` scripts:
 ```json
@@ -42,7 +42,8 @@ pnpm --filter @veritas/backend add -D prisma @types/jsdom @types/multer concurre
 pnpm --filter @veritas/backend exec prisma init
 ```
 Gotchas:
-- Nest compiles to CommonJS. `file-type` ≥ 17 and `p-limit` ≥ 4 are ESM-only → use `file-type@16`, and the in-repo `mapWithConcurrency` util instead of p-limit.
+- Nest 12 generates an ESM project (`nodenext`, relative imports end in `.js`). Still use `file-type@16` and the in-repo `mapWithConcurrency` util instead of p-limit, as decided (D-014).
+- Pin `prisma` and `@prisma/client` to the same stable version; npm's `latest` tag for `prisma` can be a release candidate.
 - Tavily and OpenRouter are called with native `fetch` (Node 22) — no SDK.
 
 ### Web dependencies

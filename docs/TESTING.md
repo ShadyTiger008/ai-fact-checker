@@ -3,9 +3,9 @@
 ## Layers
 | Layer | Tool | What |
 |---|---|---|
-| Unit (api) | Jest (Nest default) | pure logic: `InputDetector`, `Normalizer`, claim dedupe/ranking, `EvidenceRanker`, `VerdictGuard`, `SafeFetch` IP checks, env schema |
-| Integration (api) | Jest + real Postgres/Redis from compose | processors with `FakeLlmProvider`, `FakeSearchClient`, `FakeMediaClient` |
-| E2E (api) | Jest + supertest | POST /verify (article fixture served by a local HTTP server) → poll → COMPLETED report |
+| Unit (api) | Vitest (Nest 12 default, D-014) | pure logic: `InputDetector`, `Normalizer`, claim dedupe/ranking, `EvidenceRanker`, `VerdictGuard`, `SafeFetch` IP checks, env schema |
+| Integration (api) | Vitest + real Postgres/Redis from compose | processors with `FakeLlmProvider`, `FakeSearchClient`, `FakeMediaClient` |
+| E2E (api) | Vitest + supertest | POST /verify (article fixture served by a local HTTP server) → poll → COMPLETED report |
 | Media | pytest | VTT parsing, caption choice, OCR line ordering, duration guard (mock yt-dlp/whisper) |
 | Web | Vitest + Testing Library | `VerdictChip`, `ClaimCard` rendering, form validation |
 | Eval | `backend/scripts/eval.ts` | golden set accuracy against real providers |

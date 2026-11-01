@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment (only .env.example is committed)
+.env
+.env.*
+!.env.example
+
+# Tests
+coverage/
+
+# Python (media-service)
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Logs & OS / editor files
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.pem
