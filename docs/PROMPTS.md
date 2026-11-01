@@ -1,6 +1,6 @@
 # LLM Prompts & Output Schemas
 
-All prompts live in `apps/api/src/llm/prompts/*.ts` as exported constants with a `PROMPT_VERSION`.
+All prompts live in `backend/src/llm/prompts/*.ts` as exported constants with a `PROMPT_VERSION`.
 Store `promptVersion` with every result. Change prompts only by bumping the version.
 
 ## LLM provider contract
@@ -63,7 +63,7 @@ Published: {{publishedAt}}
 Segment markers look like [S12]. Set segmentIndex to the marker number where the quote appears.
 ```
 
-**Schema (Zod, in `packages/shared`)**
+**Schema (Zod, in `shared`)**
 ```ts
 export const ExtractedClaimSchema = z.object({
   text: z.string().min(10).max(400),

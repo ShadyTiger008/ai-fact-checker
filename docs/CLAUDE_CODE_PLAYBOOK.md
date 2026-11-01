@@ -11,7 +11,7 @@ Don't run `/init` — CLAUDE.md already exists (running it would overwrite/merge
 
 How the memory files load:
 - `CLAUDE.md` (root) loads every session.
-- `apps/api/CLAUDE.md`, `apps/web/CLAUDE.md`, `services/media/CLAUDE.md` load when Claude works in those folders.
+- `backend/CLAUDE.md`, `frontend/CLAUDE.md`, `media-service/CLAUDE.md` load when Claude works in those folders.
 - `docs/*.md` are read on demand (CLAUDE.md tells Claude which one to read).
 
 ## 1. Working loop (every task)
@@ -65,7 +65,7 @@ src/lib/verdict.ts. Polling with TanStack Query, stop on terminal status.
 
 ### Media service (W2-01 → W2-04)
 ```
-Work in services/media. Do W2-01 to W2-04 per docs/API.md "Media service" and
+Work in media-service. Do W2-01 to W2-04 per docs/API.md "Media service" and
 docs/PIPELINE.md §2. First check the installed paddleocr version and use its correct API.
 Mock yt-dlp/whisper/OCR in pytest. Captions preferred over Whisper for YouTube.
 ```
@@ -74,7 +74,7 @@ Mock yt-dlp/whisper/OCR in pytest. Captions preferred over Whisper for YouTube.
 ```
 Do W2-05 to W2-10 per docs/PIPELINE.md §2–3 and §9. Extractors use a strategy registry.
 Normalizer is a pure function with unit tests. ArticleExtractor tests use saved HTML fixtures
-in apps/api/test/fixtures/articles (create 3: normal news, paywall stub, JS-only shell).
+in backend/test/fixtures/articles (create 3: normal news, paywall stub, JS-only shell).
 Non-retryable failures throw UnrecoverableError with the job failure codes from docs/API.md.
 ```
 

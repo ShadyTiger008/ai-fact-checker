@@ -1,6 +1,6 @@
 # Frontend (Next.js App Router)
 
-`apps/web` · TypeScript strict · Tailwind · TanStack Query · no global state library.
+`frontend` · TypeScript strict · Tailwind · TanStack Query · no global state library.
 
 ## Routes
 | Route | Purpose |

@@ -4,7 +4,7 @@ Tick items as they're completed (`- [x]`). Each item = one Claude Code task + on
 IDs are referenced in commits and prompts (e.g. `feat(input): W1-07 POST /verify`).
 
 ## Week 1 — Frontend + API + uploads
-- [ ] W1-01 Monorepo scaffold (pnpm workspaces, web, api, shared), root scripts, `.env.example`, `.gitignore`
+- [ ] W1-01 Monorepo scaffold (pnpm workspaces `frontend`, `backend`, `shared`), root scripts, `.env.example`, `.gitignore`
 - [ ] W1-02 docker-compose (postgres, redis, minio + init); media service stub with `/health`
 - [ ] W1-03 Config module: Zod env schema, fail-fast
 - [ ] W1-04 Prisma schema (docs/DATABASE.md) + init migration + `PrismaService` + `JobsRepository.transition`
@@ -16,6 +16,7 @@ IDs are referenced in commits and prompts (e.g. `feat(input): W1-07 POST /verify
 - [ ] W1-10 Report module: GET /api/result/:id (in-progress shape), GET /api/health
 - [ ] W1-11 Web: layout, fonts, design tokens (`lib/verdict.ts`), Home page (tabs, UrlForm, FileDropzone), api client
 - [ ] W1-12 Web: Processing page (polling, stepper, progress, failed state)
+- [ ] W1-13 Production Dockerfiles for `frontend/` and `backend/` (multi-stage, repo-root context, `shared` build, `.dockerignore`) — docs/SETUP.md §4
 
 **Acceptance:** submit URL or file from UI → job row created → upload in MinIO → processing page polls and shows EXTRACTING.
 

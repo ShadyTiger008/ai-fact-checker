@@ -1,6 +1,6 @@
 # Database (PostgreSQL + Prisma)
 
-Schema file: `apps/api/prisma/schema.prisma`. Table names match the PRD: `jobs`, `documents`, `claims`, `evidence`, `verification_results`.
+Schema file: `backend/prisma/schema.prisma`. Table names match the PRD: `jobs`, `documents`, `claims`, `evidence`, `verification_results`.
 
 ```prisma
 generator client {
@@ -151,7 +151,7 @@ model VerificationResult {
 ```
 
 ## Rules
-- Migrations: `pnpm --filter @veritas/api prisma migrate dev --name <change>`. Never edit an applied migration.
+- Migrations: `pnpm --filter @veritas/backend prisma migrate dev --name <change>`. Never edit an applied migration.
 - Idempotency: workers may retry. Use `upsert` / delete-then-insert inside a transaction for a claim's evidence and result; `createMany` claims only if none exist for the job.
 - Job status updates go through `JobsRepository.transition(jobId, from[], to)` which uses `updateMany where status in from` — prevents a late retry from moving a COMPLETED job backwards.
 - Retention (later): cron deleting jobs older than 30 days (cascades).

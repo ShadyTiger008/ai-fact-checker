@@ -1,7 +1,7 @@
 # HTTP API
 
 Base: `http://localhost:4000/api` · JSON · CORS allowed origin = `WEB_ORIGIN`.
-All request/response types are exported from `packages/shared` (Zod + inferred TS types).
+All request/response types are exported from `shared` (Zod + inferred TS types).
 
 ## Error envelope
 ```json

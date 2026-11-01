@@ -3,7 +3,7 @@
 Append new entries at the bottom. Format: `## D-NNN Title (YYYY-MM-DD)` · Context · Decision · Consequences.
 
 ## D-001 Monorepo with pnpm workspaces
-Decision: `apps/web`, `apps/api`, `packages/shared`, `services/media`. No Turborepo for MVP.
+Decision: `frontend`, `backend`, `shared`, `media-service`. No Turborepo for MVP.
 Consequence: shared Zod types used by both apps without publishing.
 
 ## D-002 API and worker in one Nest codebase, two entrypoints
@@ -44,3 +44,8 @@ API: @nestjs/*, bullmq, ioredis, @prisma/client, zod, nestjs-pino, @aws-sdk/clie
 Web: next, react, tailwindcss, @tanstack/react-query, zod.
 Media: fastapi, uvicorn, httpx, pydantic, yt-dlp, faster-whisper, paddleocr, paddlepaddle, webvtt-py.
 Anything else → ask first and log here.
+
+## D-013 Top-level folders per deployable, one Docker image each (2026-11-01)
+Context: `apps/web`, `apps/api`, `packages/shared`, `services/media` were confusing to navigate and didn't map clearly onto deployable images.
+Decision: top-level `frontend/` (`@veritas/frontend`), `backend/` (`@veritas/backend`), `shared/` (`@veritas/shared`), `media-service/`. Each deployable folder has its own Dockerfile; frontend and backend images build with the repo root as context so they can include `shared/`. The backend image serves both the API and the worker (different start commands, D-002). Supersedes the folder names in D-001.
+Consequences: images build and deploy independently; `shared` needs a build step for the backend runtime image; new roadmap item W1-13 adds the frontend and backend Dockerfiles.

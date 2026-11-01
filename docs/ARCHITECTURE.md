@@ -24,9 +24,18 @@ flowchart LR
 | worker | run pipeline stages | replicas + BullMQ concurrency |
 | media | binary/ML-heavy extraction | replicas (CPU/GPU) |
 
+**Code folders → images → deployments** (D-013):
+
+| Folder | Docker image | Deployments |
+|---|---|---|
+| `frontend/` | `veritas-frontend` | web |
+| `backend/` | `veritas-backend` | api (`dist/main.js`) and worker (`dist/worker.js`) — same image, different command |
+| `media-service/` | `veritas-media` | media |
+| `shared/` | — (bundled into frontend and backend images) | — |
+
 **Why a Python media service:** yt-dlp, Whisper and PaddleOCR are Python-native; isolating them keeps the Node image small, lets media scale independently, and gives a clean HTTP contract. The Nest worker never shells out.
 
-## 2. Nest module map (`apps/api/src`)
+## 2. Nest module map (`backend/src`)
 | Module | Owns | Key classes |
 |---|---|---|
 | `input` | POST /verify, type detection, upload validation | `InputController`, `InputService`, `InputDetector` |

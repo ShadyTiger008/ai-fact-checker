@@ -1,4 +1,4 @@
-# services/media — Python FastAPI media service
+# media-service — Python FastAPI media service
 
 - Endpoints and error envelope: docs/API.md "Media service". Behaviour: docs/PIPELINE.md §2.
 - Layout: `app/main.py` (routes + auth), `app/youtube.py`, `app/transcribe.py`, `app/ocr.py`, `app/vtt.py`, `app/errors.py`, `app/settings.py`.

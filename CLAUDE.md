@@ -21,31 +21,32 @@ MVP: no auth, no browser extension, no PDFs, no deepfake detection (see docs/PRD
 veritas-ai/
 ├── CLAUDE.md                 # this file
 ├── docs/                     # source of truth for design — read before implementing
-├── apps/
-│   ├── web/                  # Next.js (App Router) + Tailwind — port 3000
-│   └── api/                  # NestJS — two entrypoints:
-│       ├── src/main.ts       #   HTTP API (port 4000, prefix /api)
-│       └── src/worker.ts     #   BullMQ worker (no HTTP)
-├── packages/
-│   └── shared/               # Zod schemas + TS types shared by web and api
-├── services/
-│   └── media/                # Python FastAPI: yt-dlp, FFmpeg, faster-whisper, PaddleOCR — port 8000
+├── frontend/                 # @veritas/frontend — Next.js (App Router) + Tailwind — port 3000 — own Docker image
+├── backend/                  # @veritas/backend — NestJS — own Docker image, two entrypoints:
+│   ├── src/main.ts           #   HTTP API (port 4000, prefix /api)
+│   └── src/worker.ts         #   BullMQ worker (no HTTP)
+├── shared/                   # @veritas/shared — Zod schemas + TS types used by frontend and backend (not deployed on its own)
+├── media-service/            # Python FastAPI: yt-dlp, FFmpeg, faster-whisper, PaddleOCR — port 8000 — own Docker image
 ├── docker-compose.yml        # postgres, redis, minio, media
 └── .claude/commands/         # custom slash commands
 ```
+Each deployable folder (`frontend/`, `backend/`, `media-service/`) has its own `Dockerfile` and is built and deployed independently. The frontend and backend images are built with the **repo root** as build context because they depend on `shared/`. See docs/SETUP.md §4.
 
 ## Commands
 ```bash
-pnpm install                                   # install all workspaces
-docker compose up -d                           # postgres:5432 redis:6379 minio:9000/9001 media:8000
-pnpm --filter @veritas/api prisma migrate dev  # apply schema
-pnpm dev                                       # web + api + worker in parallel
-pnpm --filter @veritas/api dev                 # API only
-pnpm --filter @veritas/api dev:worker          # worker only
-pnpm typecheck && pnpm lint && pnpm test       # must pass before "done"
-pnpm --filter @veritas/api test:e2e            # pipeline e2e with fake LLM + fake search
-cd services/media && uv run uvicorn app.main:app --reload --port 8000   # media service outside docker
-cd services/media && uv run pytest
+pnpm install                                       # install all workspaces
+docker compose up -d                               # postgres:5432 redis:6379 minio:9000/9001 media:8000
+pnpm --filter @veritas/backend prisma migrate dev  # apply schema
+pnpm dev                                           # frontend + api + worker in parallel
+pnpm --filter @veritas/backend dev                 # API only
+pnpm --filter @veritas/backend dev:worker          # worker only
+pnpm typecheck && pnpm lint && pnpm test           # must pass before "done"
+pnpm --filter @veritas/backend test:e2e            # pipeline e2e with fake LLM + fake search
+docker build -f frontend/Dockerfile -t veritas-frontend .   # production images (repo-root context)
+docker build -f backend/Dockerfile -t veritas-backend .
+docker build -t veritas-media media-service
+cd media-service && uv run uvicorn app.main:app --reload --port 8000   # media service outside docker
+cd media-service && uv run pytest
 ```
 
 ## Stack (decided — see docs/DECISIONS.md)
@@ -74,7 +75,7 @@ cd services/media && uv run pytest
 
 ## Code conventions
 - TypeScript `strict`, no `any` (use `unknown` + Zod). No default exports except Next.js pages/layouts.
-- Shared request/response types live in `packages/shared` and are imported by both apps — never duplicated.
+- Shared request/response types live in `shared` and are imported by both apps — never duplicated.
 - Files: `kebab-case.ts`; classes `PascalCase`; Nest files `*.module.ts`, `*.service.ts`, `*.processor.ts`, `*.controller.ts`.
 - Errors: throw `AppError(code, message, httpStatus?)` from `common/errors`. Error codes are listed in docs/API.md.
 - Logging: nestjs-pino; every worker log line includes `jobId` (and `claimId` where relevant). Never log full extracted text or API keys.

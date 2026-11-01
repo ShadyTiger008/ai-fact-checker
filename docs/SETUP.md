@@ -9,37 +9,37 @@ API keys (free tiers): **Tavily** (tavily.com) and **Gemini** (Google AI Studio)
 ```bash
 mkdir veritas-ai && cd veritas-ai && git init
 pnpm init
-printf "packages:\n  - 'apps/*'\n  - 'packages/*'\n" > pnpm-workspace.yaml
+printf "packages:\n  - 'frontend'\n  - 'backend'\n  - 'shared'\n" > pnpm-workspace.yaml
 
-# web
-pnpm dlx create-next-app@latest apps/web --ts --tailwind --eslint --app --src-dir --import-alias "@/*" --use-pnpm --skip-install
-# api
-pnpm dlx @nestjs/cli new api --directory apps/api --package-manager pnpm --skip-git --skip-install --strict
-# shared
-mkdir -p packages/shared/src services/media/app
+# frontend
+pnpm dlx create-next-app@latest frontend --ts --tailwind --eslint --app --src-dir --import-alias "@/*" --use-pnpm --skip-install
+# backend
+pnpm dlx @nestjs/cli new backend --directory backend --package-manager pnpm --skip-git --skip-install --strict
+# shared + media service
+mkdir -p shared/src media-service/app
 ```
-Set package names: `apps/web` → `@veritas/web`, `apps/api` → `@veritas/api`, `packages/shared` → `@veritas/shared` (main/types → `src/index.ts` for MVP; both apps add `"@veritas/shared": "workspace:*"`).
+Set package names: `frontend` → `@veritas/frontend`, `backend` → `@veritas/backend`, `shared` → `@veritas/shared` (main/types → `src/index.ts` for MVP; both apps add `"@veritas/shared": "workspace:*"`).
 
 Root `package.json` scripts:
 ```json
 {
   "scripts": {
-    "dev": "pnpm -r --parallel --filter @veritas/web --filter @veritas/api run dev:all",
+    "dev": "pnpm -r --parallel --filter @veritas/frontend --filter @veritas/backend run dev:all",
     "typecheck": "pnpm -r run typecheck",
     "lint": "pnpm -r run lint",
     "test": "pnpm -r run test"
   }
 }
 ```
-In `apps/api`: `dev` (nest start --watch), `dev:worker` (nest start --watch --entryFile worker), `dev:all` (concurrently both), `typecheck` (tsc --noEmit). In `apps/web`: `dev:all` = `next dev -p 3000`.
+In `backend`: `dev` (nest start --watch), `dev:worker` (nest start --watch --entryFile worker), `dev:all` (concurrently both), `typecheck` (tsc --noEmit). In `frontend`: `dev:all` = `next dev -p 3000`.
 
 ### API dependencies
 ```bash
-pnpm --filter @veritas/api add @nestjs/config @nestjs/bullmq bullmq ioredis @prisma/client zod \
+pnpm --filter @veritas/backend add @nestjs/config @nestjs/bullmq bullmq ioredis @prisma/client zod \
   @nestjs/throttler nestjs-pino pino-http @aws-sdk/client-s3 @aws-sdk/s3-request-presigner \
   @mozilla/readability jsdom cheerio @google/genai file-type@16 @nestjs/platform-express
-pnpm --filter @veritas/api add -D prisma @types/jsdom @types/multer concurrently
-pnpm --filter @veritas/api exec prisma init
+pnpm --filter @veritas/backend add -D prisma @types/jsdom @types/multer concurrently
+pnpm --filter @veritas/backend exec prisma init
 ```
 Gotchas:
 - Nest compiles to CommonJS. `file-type` ≥ 17 and `p-limit` ≥ 4 are ESM-only → use `file-type@16`, and the in-repo `mapWithConcurrency` util instead of p-limit.
@@ -47,7 +47,7 @@ Gotchas:
 
 ### Web dependencies
 ```bash
-pnpm --filter @veritas/web add @tanstack/react-query zod @veritas/shared@workspace:*
+pnpm --filter @veritas/frontend add @tanstack/react-query zod @veritas/shared@workspace:*
 ```
 
 ## 2. Environment — `.env.example` (copy to `.env`)
@@ -131,7 +131,7 @@ services:
       mc ilm rule add --expire-days 1 --prefix uploads/ local/veritas || true"
 
   media:
-    build: ./services/media
+    build: ./media-service
     env_file: .env
     environment:
       MEDIA_SERVICE_TOKEN: ${MEDIA_SERVICE_TOKEN}
@@ -143,7 +143,30 @@ volumes: { pgdata: {}, miniodata: {}, modelcache: {} }
 ```
 Presigned URLs: the worker signs with `S3_ENDPOINT=http://localhost:9000`, which the media container can't reach. Set `S3_PUBLIC_ENDPOINT_FOR_MEDIA=http://minio:9000` and sign media URLs with a second S3 client using that endpoint (or run everything in compose).
 
-## 4. Media service Dockerfile (`services/media/Dockerfile`)
+## 4. Docker images (one per deployable folder)
+Each deployable folder has its own `Dockerfile` and is built, versioned and deployed independently (D-013).
+
+| Image | Dockerfile | Build context | Runs |
+|---|---|---|---|
+| `veritas-frontend` | `frontend/Dockerfile` | repo root (needs `shared/`) | `node server.js` (Next standalone), port 3000 |
+| `veritas-backend` | `backend/Dockerfile` | repo root (needs `shared/`) | API: `node dist/main.js` (port 4000) · Worker: `node dist/worker.js` — same image, two deployments |
+| `veritas-media` | `media-service/Dockerfile` | `media-service/` | `uvicorn app.main:app`, port 8000 |
+
+```bash
+docker build -f frontend/Dockerfile -t veritas-frontend --build-arg NEXT_PUBLIC_API_URL=https://api.example.com/api .
+docker build -f backend/Dockerfile  -t veritas-backend .
+docker build -t veritas-media media-service
+```
+
+### 4a. Frontend and backend images (requirements)
+- Multi-stage on `node:22-alpine` with `corepack enable`. The build stage copies only `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `shared/` and the app's own folder, then runs `pnpm install --frozen-lockfile --filter <app>...` (the trailing `...` includes `@veritas/shared`).
+- `shared` must be consumable at runtime: give it a `build` script emitting CommonJS + `.d.ts` to `shared/dist` for the backend; the frontend uses `transpilePackages: ['@veritas/shared']`.
+- **Frontend:** `output: 'standalone'` in `next.config`; `NEXT_PUBLIC_API_URL` is inlined at build time → pass it as a build arg; runtime stage copies `.next/standalone`, `.next/static`, `public`.
+- **Backend:** `prisma generate` + `nest build` in the build stage; runtime stage contains production deps only (`pnpm deploy --prod`), `dist/`, `prisma/`. Migrations run as a separate one-off command (`prisma migrate deploy`), never on container start.
+- Run as a non-root user; add a root `.dockerignore` (`node_modules`, `.next`, `dist`, `.env*`, `.git`, `media-service`, `docs`) and `media-service/.dockerignore`.
+- No secrets baked into images; all config comes from env at runtime (Golden rule 7).
+
+### 4b. Media service Dockerfile (`media-service/Dockerfile`)
 ```dockerfile
 FROM python:3.11-slim
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg libgl1 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
@@ -162,7 +185,7 @@ Pin exact versions once it works. **PaddleOCR 2.x and 3.x have different Python 
 cp .env.example .env            # fill keys + LLM_MODEL
 docker compose up -d --build
 pnpm install
-pnpm --filter @veritas/api prisma migrate dev --name init
+pnpm --filter @veritas/backend prisma migrate dev --name init
 pnpm dev                        # web :3000, api :4000, worker
 curl localhost:4000/api/health
 ```

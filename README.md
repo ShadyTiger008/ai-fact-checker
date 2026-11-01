@@ -12,7 +12,7 @@ AI-powered verification of claims in videos, articles and images — using retri
 pnpm install
 cp .env.example .env
 docker compose up -d
-pnpm --filter @veritas/api prisma migrate dev
+pnpm --filter @veritas/backend prisma migrate dev
 pnpm dev   # http://localhost:3000
 ```
 
